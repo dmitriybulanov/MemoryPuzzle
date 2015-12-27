@@ -97,9 +97,17 @@ initialNewGame gen = Game
     ,   status = MainMenu
     ,   using = 0
     }   
-    
-{-    
-    
+	
+  -- генерация позиций иконок начиная со стартовой точки
+genRectPositions :: Float -> Float -> Int -> Int -> Float -> Float -> Float -> Float -> Matrix WindowPosition
+genRectPositions stX stY countC countR szX szY intervalX intervalY = fromLists $ fst $ foldl(foldFunI) ([], (stX, stY)) [1..countC]
+    where
+        genArrayOfRect stX stY = fst $ foldl(foldFunJ) ([], (stX, stY)) [1..countR]
+        foldFunJ (list, (stX, stY)) x = (list ++ [(stX, stY)], (stX + intervalX + sizeX, stY))
+        foldFunI (list, (stX, stY)) x = (list ++ [genArrayOfRect stX stY]
+            , (stX, stY - intervalY - sizeY))
+  
+{-      
 drawingMainWindow :: Picture
 drawingMainWindow  = pictures
   [ translate (-285) 220 $ Scale 0.6 0.6 $ Text "Memory Puzzle"
