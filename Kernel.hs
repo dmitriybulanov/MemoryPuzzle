@@ -12,8 +12,13 @@ import Control.Monad(when)
 type Position = (Int, Int)
 type FieldSize = Int
 
-data FieldElem = Opened Int | Closed Int | Founded
+data FieldElem a = Opened a | Closed a | Founded
     deriving (Show, Eq)
+
+instance Functor FieldElem where
+    fmap f (Opened num) = Opened (f num)
+    fmap f (Closed num) = Closed (f num)
+    fmap f _ = Founded
     
 isOpened :: FieldElem -> Bool    
 isOpened (Opened x) = True
