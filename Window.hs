@@ -233,8 +233,8 @@ handleKeys _ _ currentGame = currentGame
 render :: [Picture] -> Picture -> Picture -> Picture -> MemoryPuzzleGame -> Picture
 render _ p1 _ _ (Game _ _ _ _ _ _ _ MainMenu _) =  p1
 render _ _ p2 _ (Game _ _ _ _ _ _ _ ModeSelection _)  = p2
-render picks _ _ p3 (Game field rectPositions _ _ _ _ _ GameStarted _) = pictures $ [p3] ++ (genRectagles field rectPositions picks)
-render picks _ _ p3 (Game field rectPositions _ _ _ _ _ ChekingCard _) = pictures $ [p3] ++ (genRectagles field rectPositions picks)
+render picks _ _ p3 (Game field rectPositions _ _ _ sc _ GameStarted _) = pictures $ [p3,  Color white $ translate (-285) 280 $ Scale 0.6 0.6 $ Text $ show sc] ++ (genRectagles field rectPositions picks)
+render picks _ _ p3 (Game field rectPositions _ _ _ sc _ ChekingCard _) = pictures $ [p3,  Color white $ translate (-285) 280 $ Scale 0.6 0.6 $ Text $ show sc] ++ (genRectagles field rectPositions picks)
 
 
 mWindow :: Display
@@ -243,16 +243,17 @@ mWindow = InWindow "Memory Puszzle" (width, height) (offset, offset)
 update :: Float -> MemoryPuzzleGame -> MemoryPuzzleGame
 update _ (Game field rPositions fScard sScard time sc mode ChekingCard 0) = Game
             { 
-                field = fst $ checkOpened (fScard,sScard) countOfPicks field
+                field = fst $ openResult
             ,   rectPositions = rPositions
             ,   firstSelectedCard = (-1,-1)
             ,   secondSelectedCard = (-1,-1)
             ,   timer = time
-            ,   score = sc
+            ,   score = if snd openResult == True then sc +10 else sc - 10
             ,   difficult = mode
             ,   status = GameStarted
             ,   using = 0
             }
+                where openResult = checkOpened (fScard,sScard) countOfPicks field
 update _ (Game field rPositions fScard sScard time sc mode stat uses)  = Game
             { 
                 field = field
