@@ -16,9 +16,21 @@ import Control.Monad(when)
 type Position = (Int, Int)
 type FieldSize = Int
 
-data FieldElem = Opened Int | Closed Int | Found
+data FieldElem = Opened Int | Closed Int | Founded
     deriving (Show, Eq)
 
+isOpened :: FieldElem -> Bool    
+isOpened (Opened x) = True
+isOpened _ = False
+
+isFounded :: FieldElem -> Bool    
+isFounded Founded = True
+isFounded _ = False
+
+isClosed :: FieldElem -> Bool    
+isClosed (Closed x) = True
+isClosed _ = False
+            
 getRandomPosition :: StdGen -> FieldSize -> (Position, StdGen)
 getRandomPosition gen size = let (i1, nGen) = (randomR (1,size) gen) in ((i1, fst $ randomR (1,size) nGen), 
                                     snd $ randomR (1,size) nGen)
@@ -41,14 +53,20 @@ generateFieldMatrix gen size = fillMatrix (myZero size size) (genMatrixPositions
 
 
 myZero :: Int -> Int -> Matrix FieldElem
-myZero colums rows = fromLists $ replicate colums (replicate rows Found) 
+myZero colums rows = fromLists $ replicate colums (replicate rows Founded) 
 
   
 isAllFounded :: Matrix FieldElem -> Bool
-isAllFounded = null . dropWhile(== Found) . toList 
+isAllFounded = null . dropWhile(== Founded) . toList 
 
-makeMove :: (Position, Position) -> Matrix FieldElem -> Matrix FieldElem
-makeMove (pos1, pos2) matr = if check pos1 pos2 matr then guess pos1 pos2 matr else  matr
+openCard :: Position -> Matrix FieldElem -> Matrix FieldElem
+openCard (i, j) matr 
+    | getElem i j matr == Founded = matr
+    | isOpened $ getElem i j matr = matr
+    | otherwise = let (Closed elem) = getElem i j matr in (setElem (Opened elem) (i, j) matr)
+        
+checkOpened :: (Position, Position) -> Matrix FieldElem -> Matrix FieldElem
+checkOpened (pos1, pos2) matr = if check pos1 pos2 matr then guess pos1 pos2 matr else  matr
     where
-        check (i1, j1) (i2, j2) matr = getElem i1 j1 matr == getElem i2 j2 matr && getElem i2 j2 matr /= Found
-        guess pos1 pos2 matr = setElem Found pos1 (setElem Found pos2 matr)
+        check (i1, j1) (i2, j2) matr = getElem i1 j1 matr == getElem i2 j2 matr && getElem i2 j2 matr /= Founded
+        guess pos1 pos2 matr = setElem Founded pos1 (setElem Founded pos2 matr)       
