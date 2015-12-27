@@ -19,9 +19,9 @@ intervalX = 15
 intervalY = 15
 sizeX = 80
 sizeY = 100
-count = 8
-countC = 4
-countR = 8
+--count = 8
+--countC = 4
+--countR = 8
 countOfPicks = 5
 background :: Color
 background = white
@@ -70,8 +70,7 @@ isUsing (Game _ _ _ _ _ _ _ _ uses) = if(uses == 0) then False else True
 initialNewGame :: StdGen -> MemoryPuzzleGame
 initialNewGame gen = Game   
     {
-        field = generateFieldMatrix gen countC countR
-    ,   rectPositions = fromLists []
+        rectPositions = fromLists []
     ,   firstSelectedCard = (-1,-1)
     ,   secondSelectedCard = (-1,-1)
     ,   timer = 0.0
@@ -132,6 +131,74 @@ findIndexInMatr positions clickPos = let (indI, indJ, (resI, resJ)) = foldl(fold
 
 
 
+-- Проверка на нажатие определенной кнопки
+-- ____________________________________________________________________________________________________________________________
+
+
+checkOnClickOnStart :: WindowPosition -> Bool 
+checkOnClickOnStart (x,y) = if( x > -170 && x < 150) then if ( y > 10 && y < 140) then True else False  else False
+
+checkOnClickOnExit :: WindowPosition -> Bool
+checkOnClickOnExit (x,y) = if( x > -170 && x < 150) then if ( y > -150 && y < -20) then True else False  else False
+
+checkOnClickOnBack :: WindowPosition -> Bool
+checkOnClickOnBack (x,y) = if( x > -170 && x < 150) then if ( y > -330   && y < -210) then True else False  else False
+
+checkOnClickOnEasyMode :: WindowPosition -> Bool
+checkOnClickOnEasyMode (x,y) = if( x > -170 && x < 150) then if ( y > 120   && y < 240) then True else False  else False
+
+checkOnClickOnMediumMode :: WindowPosition -> Bool
+checkOnClickOnMediumMode (x,y) = if( x > -170 && x < 150) then if ( y > -10   && y < 110) then True else False  else False
+
+checkOnClickOnHardMode :: WindowPosition -> Bool
+checkOnClickOnHardMode (x,y) = if( x > -170 && x < 150) then if ( y > -150   && y < -30) then True else False  else False
+  
+-- ____________________________________________________________________________________________________________________________
+
+
+setNewStatus :: MemoryPuzzleGame -> GameStatus -> MemoryPuzzleGame
+setNewStatus (Game field  rPositions fScard sScard time sc mode _ _) GameStarted = Game
+            {
+                field = field
+            ,   rectPositions = genRectPositions startX startY countC countR sizeX sizeY intervalX intervalY
+            ,   firstSelectedCard = fScard
+            ,   secondSelectedCard = sScard
+            ,   timer = time
+            ,   score = sc
+            ,   difficult = mode
+            ,   status = GameStarted
+            ,   using = 2
+            }
+                where countC = if( mode == Easy) then 2 else  4
+                      countR = if( mode == Easy) then 6 else 8
+setNewStatus (Game field  rPositions fScard sScard time sc mode _ _) newStatus = Game
+            {
+                field = field
+            ,   rectPositions = rPositions
+            ,   firstSelectedCard = fScard
+            ,   secondSelectedCard = sScard
+            ,   timer = time
+            ,   score = sc
+            ,   difficult = mode
+            ,   status = newStatus
+            ,   using = 2
+            }
+
+
+handleKeys :: Event -> MemoryPuzzleGame -> MemoryPuzzleGame
+handleKeys (EventKey (MouseButton LeftButton) _ _ position) currentGame
+        | isUsing currentGame == False && getStatus currentGame  == MainMenu      && checkOnClickOnStart       position == True = setNewStatus currentGame ModeSelection
+        | isUsing currentGame == False && getStatus currentGame  == MainMenu      && checkOnClickOnExit        position == True = setNewStatus currentGame GameExit
+        | isUsing currentGame == False && getStatus currentGame  == ModeSelection && checkOnClickOnBack        position == True = setNewStatus currentGame MainMenu
+        | isUsing currentGame == False && getStatus currentGame  == ModeSelection && checkOnClickOnEasyMode    position == True = setNewStatus currentGame GameStarted
+        | isUsing currentGame == False && getStatus currentGame  == ModeSelection && checkOnClickOnMediumMode  position == True = setNewStatus currentGame GameStarted
+        | isUsing currentGame == False && getStatus currentGame  == ModeSelection && checkOnClickOnHardMode    position == True = setNewStatus currentGame GameStarted
+        | otherwise = currentGame
+handleKeys _ currentGame = currentGame
+
+
+
+
 
 render :: [Picture] -> Picture -> Picture -> Picture -> MemoryPuzzleGame -> Picture
 render _ p1 _ _ (Game _ _ _ _ _ _ _ MainMenu _) =  p1
@@ -168,3 +235,15 @@ update _ (Game field rPositions fScard sScard time sc mode stat uses)  = Game
             ,   status = stat
             ,   using = if (uses > 0 ) then uses-1 else 0
             }
+
+
+
+main :: IO ()
+main = do
+    bGroundMainMenu <- loadBMP "Backgrounds\\mainMenu.bmp"
+    bGroundModeSelection <- loadBMP "Backgrounds\\modeSelection.bmp"
+    bGroundGameInProgress <- loadBMP "Backgrounds\\gameInProgress.bmp"
+    picks <- loadIcons countOfPicks
+    gen <- newStdGen
+    play mWindow background fps (initialNewGame gen) (render picks bGroundMainMenu bGroundModeSelection bGroundGameInProgress) handleKeys update
+    
