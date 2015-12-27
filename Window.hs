@@ -109,8 +109,14 @@ loadIcons count = do
             addIcon :: IO [Picture] -> String -> IO [Picture]
             addIcon picks line = (++) <$> picks <*> (loadIcon line)
 			
+			
 findIndexInMatr :: [WindowPosition] -> WindowPosition -> Position
-findIndexInMatr positions clickPos = undefined
+findIndexInMatr positions clickPos = let (indI, indJ, (resI, resJ)) = foldl(foldlI) (0, 0, (-1,-1)) positions in if resI == -1 then (-1, -1) else (resI + 1, resJ + 1)
+        where 
+            isNear (x1, y1) (x2, y2) = abs (x1 - x2) < sizeX / 2 && abs (y1 - y2) < sizeY / 2
+            foldlI (i, j, (resI, resJ)) curPos = if isNear curPos clickPos then (calcI, mod (j + 1) countR, (i, j)) else (calcI, mod (j + 1) countR, (resI, resJ))
+                where   
+                    calcI = if mod (j + 1) countR == 0 then mod (i+1) countC else i
   
 {-      
 drawingMainWindow :: Picture
