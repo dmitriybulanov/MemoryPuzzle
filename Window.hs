@@ -10,6 +10,17 @@ width = 1024
 height = 768
 offset = 0
 
+startX = -280
+startY = 150
+intervalX = 15
+intervalY = 15
+sizeX = 80
+sizeY = 100
+count = 8
+countC = 4
+countR = 8
+countOfPicks = 5
+
 background :: Color
 background = white
 
