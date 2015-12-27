@@ -83,9 +83,9 @@ deleteCard (i, j) matr = case getElem i j matr of
         
 -- проверка двух открытых карт 
 checkOpened :: (Position, Position) -> Int -> Matrix (FieldElem Int) -> (Matrix (FieldElem Int), Bool)
-checkOpened (pos1, pos2) num matr = if check pos1 pos2 matr then guess pos1 pos2 matr else negative pos1 pos2 matr
+checkOpened (pos1@(i1,j1), pos2@(i2, j2)) num matr = if check then guess else negative
     where
         inverseMod num1 num2 = mod num2 num1   
-        check (i1, j1) (i2, j2) matr = fmap (inverseMod num) (getElem i1 j1 matr) == fmap (inverseMod num) (getElem i2 j2 matr) && getElem i2 j2 matr /= Deleted
-        guess pos1 pos2 matr = (deleteCard pos1 (deleteCard pos2 matr), True)
-        negative pos1 pos2 matr = (closeCard pos1 (closeCard pos2 matr), False)
+        check = fmap (inverseMod num) (getElem i1 j1 matr) == fmap (inverseMod num) (getElem i2 j2 matr) && getElem i2 j2 matr /= Deleted
+        guess = (deleteCard pos1 (deleteCard pos2 matr), True)
+        negative = (closeCard pos1 (closeCard pos2 matr), False)
