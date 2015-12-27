@@ -65,15 +65,15 @@ isAllFounded :: Matrix (FieldElem Int) -> Bool
 isAllFounded = null . dropWhile(== Founded) . toList 
 
 openCard :: Position -> Matrix (FieldElem Int)-> Matrix (FieldElem Int)
-openCard (i, j) matr 
-    | isFounded $ getElem i j matr = matr
-    | isOpened $ getElem i j matr = matr
-    | otherwise = let (Closed elem) = getElem i j matr in (setElem (Opened elem) (i, j) matr)
- 
+openCard (i, j) matr = case getElem i j matr of
+    (Closed el) -> setElem (Opened el) (i, j) matr
+    _ -> matr
+
+inverseMod num1 num2 = mod num2 num1    
 checkOpened :: (Position, Position) -> Int -> Matrix (FieldElem Int) -> Matrix (FieldElem Int)
 checkOpened (pos1, pos2) num matr = if check pos1 pos2 matr then guess pos1 pos2 matr else negative pos1 pos2 matr
     where
-        check (i1, j1) (i2, j2) matr = fmap (mod num) (getElem i1 j1 matr) == fmap (mod num) (getElem i2 j2 matr) && getElem i2 j2 matr /= Founded
+        check (i1, j1) (i2, j2) matr = fmap (inverseMod num) (getElem i1 j1 matr) == fmap (inverseMod num) (getElem i2 j2 matr) && getElem i2 j2 matr /= Founded
         guess pos1 pos2 matr = setElem Founded pos1 (setElem Founded pos2 matr)
         negative pos1 pos2 matr = setClosed pos1 (setClosed pos2 matr)
         
