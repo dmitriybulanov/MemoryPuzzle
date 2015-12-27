@@ -108,6 +108,9 @@ loadIcons count = do
                 return $ [bmp]
             addIcon :: IO [Picture] -> String -> IO [Picture]
             addIcon picks line = (++) <$> picks <*> (loadIcon line)
+			
+findIndexInMatr :: [WindowPosition] -> WindowPosition -> Position
+findIndexInMatr positions clickPos = undefined
   
 {-      
 drawingMainWindow :: Picture
