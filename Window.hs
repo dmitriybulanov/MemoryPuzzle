@@ -119,7 +119,7 @@ loadIcons count = do
             addIcon picks line = (++) <$> picks <*> (loadIcon line)
 
 
-findIndexInMatr :: [WindowPosition] -> WindowPosition -> Position
+findIndexInMatr :: [WindowPosition] -> WindowPosition -> Int -> Int -> Position
 findIndexInMatr positions clickPos = let (indI, indJ, (resI, resJ)) = foldl(foldlI) (0, 0, (-1,-1)) positions in if resI == -1 then (-1, -1) else (resI + 1, resJ + 1)
         where 
             isNear (x1, y1) (x2, y2) = abs (x1 - x2) < sizeX / 2 && abs (y1 - y2) < sizeY / 2
