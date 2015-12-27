@@ -104,13 +104,13 @@ genRectagles elems positions picks = fst $ foldl(foldFunI) ([], 0) (toList posit
         foldFunI (list, count) (x, y) = (list ++ [getTranslate x y count], count + 1)
         getPick curInd = case (toList elems) !! curInd of
             (Opened elem) -> picks !! (mod elem countOfPicks)
-            (Closed elem) -> picks !! (length picks - 1)
-            Deleted -> rectangleSolid 50 50
+            (Closed elem) -> picks !! (length picks - 2)
+            Deleted -> picks !! (length picks - 1)
 
 
 loadIcons :: Int -> IO [Picture]
 loadIcons count = do
-    addIcon (foldl (\acc x -> addIcon acc ("icons\\" ++ show x ++ ".bmp")) (loadIcon "icons\\1.bmp") [2..count]) ("icons\\suit.bmp")
+    addIcon (addIcon (foldl (\acc x -> addIcon acc ("icons\\" ++ show x ++ ".bmp")) (loadIcon "icons\\1.bmp") [2..count]) ("icons\\suit.bmp")) ("icons\\deleted.bmp")
         where
             loadIcon :: String -> IO [Picture]
             loadIcon fname = do

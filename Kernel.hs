@@ -37,12 +37,11 @@ openAll = funToAll(\(Closed e) -> (Opened e))
 deleteAll :: Matrix (FieldElem Int) -> Matrix (FieldElem Int)
 deleteAll = funToAll(\x -> Deleted)
 
--- генерация рандомной позиции в матрице        
+-- генерация рандомных позиций в матрице        
 getRandomPosition :: StdGen -> Int -> Int -> (Position, StdGen)
 getRandomPosition gen sizeC sizeR = let (i1, nGen) = (randomR (1,sizeC) gen) in ((i1, fst $ randomR (1,sizeR) nGen), 
                                     snd $ randomR (1,sizeR) nGen)
-
--- генерация списка позиций в матрице, две подряд идущие будут хранить одно число                                    
+                                  
 genMatrixPositions :: StdGen -> Int -> Int -> [Position]
 genMatrixPositions generator sizeC sizeR = foldl(mainFun generator) [] [1..sizeC*sizeR]
     where
