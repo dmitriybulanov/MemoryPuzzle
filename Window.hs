@@ -30,24 +30,38 @@ fps = 60
 
 
 
+data Mode = Easy | Medium | Hard | NotSelected
+    deriving (Show, Eq)
+
+data GameStatus = ModeSelection | GameStarted | MainMenu | GamePaused | GameFinished | GameExit | ChekingCard | CardPreview
+    deriving (Show, Eq)
+
+
+
 data MemoryPuzzleGame = Game
     {
-      field :: Int
-    , score :: Int
-    , started :: Bool
-    } deriving Show
-
-    
-initialNewGame :: Int -> Int ->  MemoryPuzzleGame
-initialNewGame n m = Game   
-    {
-        field = n * m
-    ,   score = 0
-    ,   started = False
+        field :: Matrix FieldElem
+    ,   rectPositions :: Matrix WindowPosition
+    ,   firstSelectedCard  :: Position
+    ,   secondSelectedCard :: Position
+    ,   timer :: Float
+    ,   score :: Int
+    ,   difficult :: Mode
+    ,   status :: GameStatus
+    ,   using :: Float
     }   
+    deriving Show
 
+
+getStatus :: MemoryPuzzleGame -> GameStatus
+getStatus (Game _ _ _ _ _ _ _ currentStatus _) = currentStatus
+
+isUsing :: MemoryPuzzleGame -> Bool
+isUsing (Game _ _ _ _ _ _ _ _ uses) = if(uses == 0) then False else True
     
-    
+
+
+{-    
     
 drawingMainWindow :: Picture
 drawingMainWindow  = pictures
@@ -93,4 +107,4 @@ update _ mGame = mGame
 main :: IO ()
 main = do
     play mWindow background fps (initialNewGame 300 300) render handleKeys update
-    
+    -}
