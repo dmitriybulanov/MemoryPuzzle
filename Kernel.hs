@@ -11,20 +11,26 @@ import Control.Monad(when)
 
 type Position = (Int, Int)
 
-data FieldElem a = Opened a | Closed a | Founded
+data FieldElem a = Opened a | Closed a | Deleted
     deriving (Show, Eq)
 
 instance Functor FieldElem where
     fmap f (Opened num) = Opened (f num)
     fmap f (Closed num) = Closed (f num)
-    fmap f _ = Founded
+    fmap f _ = Deleted
 
--- закрывает карту, если та открыта    
-setClosed :: Position -> Matrix (FieldElem Int) -> Matrix (FieldElem Int)
-setClosed pos@(i1, j1) matr = case getElem i1 j1 matr of 
-        (Opened el) -> setElem (Closed el) pos matr
-        (Closed el) -> matr
-        Founded -> matr
+-- применение какой-то функции ко всем картам
+funToAll :: (FieldElem Int -> FieldElem Int) ->  Matrix (FieldElem Int) -> Matrix (FieldElem Int)
+funToAll f matrix = fromList (nrows matrix) (ncols matrix) $ map f $ toList matrix
+
+closeAll :: Matrix (FieldElem Int) -> Matrix (FieldElem Int)
+closeAll = funToAll(\(Opened e) -> (Closed e))
+
+openAll :: Matrix (FieldElem Int) -> Matrix (FieldElem Int)
+openAll = funToAll(\(Closed e) -> (Opened e))
+
+deleteAll :: Matrix (FieldElem Int) -> Matrix (FieldElem Int)
+deleteAll = funToAll(\x -> Deleted)
 
 -- генерация рандомной позиции в матрице        
 getRandomPosition :: StdGen -> Int -> Int -> (Position, StdGen)
@@ -51,24 +57,36 @@ generateFieldMatrix gen sizeC sizeR = fillMatrix (myZero sizeC sizeR) (genMatrix
 
 -- генерация нулевой матрицы
 myZero :: Int -> Int -> Matrix (FieldElem Int)
-myZero colums rows = fromLists $ replicate colums (replicate rows Founded) 
+myZero colums rows = fromLists $ replicate colums (replicate rows Deleted) 
 
 -- все ли угаданы?  
 isAllFounded :: Matrix (FieldElem Int) -> Bool
-isAllFounded = null . dropWhile(== Founded) . toList 
+isAllFounded = null . dropWhile(== Deleted) . toList 
 
--- открытие карты
+-- открытие карты, если она открыта
 openCard :: Position -> Matrix (FieldElem Int)-> Matrix (FieldElem Int)
 openCard (i, j) matr = case getElem i j matr of
     (Closed el) -> setElem (Opened el) (i, j) matr
     _ -> matr
- 
+    
+-- закрывает карту, если та открыта    
+closeCard :: Position -> Matrix (FieldElem Int) -> Matrix (FieldElem Int)
+closeCard (i, j) matr = case getElem i j matr of 
+        (Opened el) -> setElem (Closed el) (i, j) matr
+        _ -> matr
+
+--  удаление карты, удалять можно, только если она открыта       
+deleteCard :: Position -> Matrix (FieldElem Int) -> Matrix (FieldElem Int)
+deleteCard (i, j) matr = case getElem i j matr of 
+        (Opened el) -> setElem Deleted (i, j) matr
+        _ -> matr       
+        
 -- проверка двух открытых карт 
 checkOpened :: (Position, Position) -> Int -> Matrix (FieldElem Int) -> (Matrix (FieldElem Int), Bool)
 checkOpened (pos1, pos2) num matr = if check pos1 pos2 matr then guess pos1 pos2 matr else negative pos1 pos2 matr
     where
         inverseMod num1 num2 = mod num2 num1   
-        check (i1, j1) (i2, j2) matr = fmap (inverseMod num) (getElem i1 j1 matr) == fmap (inverseMod num) (getElem i2 j2 matr) && getElem i2 j2 matr /= Founded
-        guess pos1 pos2 matr = (setElem Founded pos1 (setElem Founded pos2 matr), True)
-        negative pos1 pos2 matr = (setClosed pos1 (setClosed pos2 matr), False)
+        check (i1, j1) (i2, j2) matr = fmap (inverseMod num) (getElem i1 j1 matr) == fmap (inverseMod num) (getElem i2 j2 matr) && getElem i2 j2 matr /= Deleted
+        guess pos1 pos2 matr = (deleteCard pos1 (deleteCard pos2 matr), True)
+        negative pos1 pos2 matr = (closeCard pos1 (closeCard pos2 matr), False)
         
