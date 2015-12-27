@@ -39,10 +39,10 @@ getRandomPosition gen sizeC sizeR = let (i1, nGen) = (randomR (1,sizeC) gen) in 
 
 -- генерация списка позиций в матрице, две подряд идущие будут хранить одно число                                    
 genMatrixPositions :: StdGen -> Int -> Int -> [Position]
-genMatrixPositions generator sizeC sizeR = foldl(\acc x -> mainFun acc x generator) [] [1..sizeC*sizeR]
+genMatrixPositions generator sizeC sizeR = foldl(mainFun generator) [] [1..sizeC*sizeR]
     where
-        mainFun used cur curGen = let (pos, nGen) = getRandomPosition curGen sizeC sizeR in if elem pos used then
-                mainFun used cur nGen else used ++ [pos]
+        mainFun curGen used cur = let (pos, nGen) = getRandomPosition curGen sizeC sizeR in if elem pos used then
+                mainFun nGen used cur else used ++ [pos]
 
 -- заполнение матрице в соответствии со сгенерированными позициями
 fillMatrix :: Matrix (FieldElem Int) -> [Position] -> Matrix (FieldElem Int)
@@ -89,4 +89,3 @@ checkOpened (pos1, pos2) num matr = if check pos1 pos2 matr then guess pos1 pos2
         check (i1, j1) (i2, j2) matr = fmap (inverseMod num) (getElem i1 j1 matr) == fmap (inverseMod num) (getElem i2 j2 matr) && getElem i2 j2 matr /= Deleted
         guess pos1 pos2 matr = (deleteCard pos1 (deleteCard pos2 matr), True)
         negative pos1 pos2 matr = (closeCard pos1 (closeCard pos2 matr), False)
-        
