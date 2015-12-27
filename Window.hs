@@ -58,7 +58,31 @@ getStatus (Game _ _ _ _ _ _ _ currentStatus _) = currentStatus
 
 isUsing :: MemoryPuzzleGame -> Bool
 isUsing (Game _ _ _ _ _ _ _ _ uses) = if(uses == 0) then False else True
-    
+ 
+
+
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+genRectPositions :: Float -> Float -> Int -> Int -> Float -> Float -> Float -> Float -> Matrix WindowPosition
+genRectPositions stX stY countC countR szX szY intervalX intervalY = fromLists $ fst $ foldl(foldFunI) ([], (stX, stY)) [1..countC]
+    where
+        genArrayOfRect stX stY = fst $ foldl(foldFunJ) ([], (stX, stY)) [1..countR]
+        foldFunJ (list, (stX, stY)) x = (list ++ [(stX, stY)], (stX + intervalX + sizeX, stY))
+        foldFunI (list, (stX, stY)) x = (list ++ [genArrayOfRect stX stY]
+            , (stX, stY - intervalY - sizeY)) 
 
 
 {-    
