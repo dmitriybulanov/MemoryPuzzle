@@ -65,7 +65,8 @@ openCard (i, j) matr
     | otherwise = let (Closed elem) = getElem i j matr in (setElem (Opened elem) (i, j) matr)
  
 checkOpened :: (Position, Position) -> Matrix FieldElem -> Matrix FieldElem
-checkOpened (pos1, pos2) matr = if check pos1 pos2 matr then guess pos1 pos2 matr else matr
+checkOpened (pos1, pos2) matr = if check pos1 pos2 matr then guess pos1 pos2 matr else negative pos1 pos2 matr
     where
         check (i1, j1) (i2, j2) matr = getElem i1 j1 matr == getElem i2 j2 matr && getElem i2 j2 matr /= Founded
         guess pos1 pos2 matr = setElem Founded pos1 (setElem Founded pos2 matr)
+        negative pos1 pos2 matr = setClosed pos1 (setClosed pos2 matr)
