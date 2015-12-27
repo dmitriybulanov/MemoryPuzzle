@@ -230,11 +230,11 @@ handleKeys _ _ currentGame = currentGame
 
 
 
-render :: [Picture] -> Picture -> Picture -> Picture -> MemoryPuzzleGame -> Picture
-render _ p1 _ _ (Game _ _ _ _ _ _ _ MainMenu _) =  p1
-render _ _ p2 _ (Game _ _ _ _ _ _ _ ModeSelection _)  = p2
-render picks _ _ p3 (Game field rectPositions _ _ _ sc _ GameStarted _) = pictures $ [p3,  Color white $ translate (-285) 280 $ Scale 0.6 0.6 $ Text $ show sc] ++ (genRectagles field rectPositions picks)
-render picks _ _ p3 (Game field rectPositions _ _ _ sc _ ChekingCard _) = pictures $ [p3,  Color white $ translate (-285) 280 $ Scale 0.6 0.6 $ Text $ show sc] ++ (genRectagles field rectPositions picks)
+render :: [Picture] -> Picture -> Picture -> Picture -> Picture -> Picture -> MemoryPuzzleGame -> Picture
+render _ p1 _ _ _ _(Game _ _ _ _ _ _ _ MainMenu _) =  p1
+render _ _ p2 _ _ _(Game _ _ _ _ _ _ _ ModeSelection _)  = p2
+render picks _ _ p3 _ _(Game field rectPositions _ _ _ sc _ GameStarted _) = pictures $ [p3,  Color white $ translate (-285) 280 $ Scale 0.6 0.6 $ Text $ show sc] ++ (genRectagles field rectPositions picks)
+render picks _ _ p3 _ _(Game field rectPositions _ _ _ sc _ ChekingCard _) = pictures $ [p3,  Color white $ translate (-285) 280 $ Scale 0.6 0.6 $ Text $ show sc] ++ (genRectagles field rectPositions picks)
 
 
 mWindow :: Display
@@ -274,7 +274,9 @@ main = do
     bGroundMainMenu <- loadBMP "Backgrounds\\mainMenu.bmp"
     bGroundModeSelection <- loadBMP "Backgrounds\\modeSelection.bmp"
     bGroundGameInProgress <- loadBMP "Backgrounds\\gameInProgress.bmp"
+    bGroundGamePaused <- loadBMP "Backgrounds\\pause.bmp"
+    bGroundGameResult <- loadBMP "Backgrounds\\gameResults.bmp"
     picks <- loadIcons countOfPicks
     gen <- newStdGen
-    play mWindow background fps (initialNewGame gen) (render picks bGroundMainMenu bGroundModeSelection bGroundGameInProgress) (handleKeys gen) update
+    play mWindow background fps (initialNewGame gen) (render picks bGroundMainMenu bGroundModeSelection bGroundGameInProgress bGroundGamePaused bGroundGameResult) (handleKeys gen) update
     
