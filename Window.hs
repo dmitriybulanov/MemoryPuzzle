@@ -22,10 +22,7 @@ intervalX = 15
 intervalY = 15
 sizeX = 80
 sizeY = 100
---count = 8
---countC = 4
---countR = 8
-countOfPicks = 5
+countOfPicks = 24
 background :: Color
 background = white
 
@@ -190,6 +187,31 @@ setNewStatus _ (Game field  rPositions fScard sScard time sc mode _ _) newStatus
             ,   using = 2
             }
 
+oCard :: Position -> MemoryPuzzleGame -> MemoryPuzzleGame
+oCard pos (Game f rPositions (-1,-1) (-1,-1) time sc mode stat _) = Game 
+    {
+        field = openCard  pos f
+    ,   rectPositions = rPositions
+    ,   firstSelectedCard = pos
+    ,   secondSelectedCard = (-1,-1)
+    ,   timer = time
+    ,   score = sc 
+    ,   difficult = mode
+    ,   status = stat
+    ,   using = 2 
+    }
+oCard pos (Game f rPositions fScard (-1,-1) time sc mode _ _) = Game 
+    {
+        field =  if (pos /= fScard) then (openCard pos f) else f
+    ,   rectPositions = rPositions
+    ,   firstSelectedCard = fScard
+    ,   secondSelectedCard = if( pos /= fScard) then pos else (-1,-1)
+    ,   timer = time
+    ,   score = sc 
+    ,   difficult = mode
+    ,   status = if( pos /= fScard) then ChekingCard else GameStarted
+    ,   using = 2
+    }   
 
 handleKeys :: StdGen ->  Event -> MemoryPuzzleGame -> MemoryPuzzleGame
 handleKeys gen (EventKey (MouseButton LeftButton) _ _ position) currentGame
@@ -199,7 +221,9 @@ handleKeys gen (EventKey (MouseButton LeftButton) _ _ position) currentGame
         | isUsing currentGame == False && getStatus currentGame  == ModeSelection && checkOnClickOnEasyMode    position == True = setNewStatus gen currentGame GameStarted Easy
         | isUsing currentGame == False && getStatus currentGame  == ModeSelection && checkOnClickOnMediumMode  position == True = setNewStatus gen currentGame GameStarted Medium
         | isUsing currentGame == False && getStatus currentGame  == ModeSelection && checkOnClickOnHardMode    position == True = setNewStatus gen currentGame GameStarted Hard
+        | isUsing currentGame == False && getStatus currentGame  == GameStarted   && cardPosition /= (-1,-1) = oCard cardPosition currentGame
         | otherwise = currentGame
+                 where cardPosition = findIndexInMatr (toList $ rectPositions currentGame) position (if difficult currentGame == Easy then 2 else if (difficult currentGame == Medium ) then 4 else 5) 8
 handleKeys _ _ currentGame = currentGame
 
 
