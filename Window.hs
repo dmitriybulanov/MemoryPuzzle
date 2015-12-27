@@ -1,8 +1,11 @@
+{-# LANGUAGE MultiWayIf #-}
+
 import Graphics.Gloss
 import Graphics.Gloss.Interface.IO.Game
 import Kernel
 import System.Random
 import Data.Matrix
+
 
 -- Константы 
 -- _______________________________________________________________________________________
@@ -13,7 +16,7 @@ width = 1024
 height = 768
 offset = 0
 
-startX = -280
+startX = -320
 startY = 150
 intervalX = 15
 intervalY = 15
@@ -70,7 +73,8 @@ isUsing (Game _ _ _ _ _ _ _ _ uses) = if(uses == 0) then False else True
 initialNewGame :: StdGen -> MemoryPuzzleGame
 initialNewGame gen = Game   
     {
-        rectPositions = fromLists []
+        field = generateFieldMatrix gen 2 2
+    ,   rectPositions = fromLists []
     ,   firstSelectedCard = (-1,-1)
     ,   secondSelectedCard = (-1,-1)
     ,   timer = 0.0
@@ -120,7 +124,7 @@ loadIcons count = do
 
 
 findIndexInMatr :: [WindowPosition] -> WindowPosition -> Int -> Int -> Position
-findIndexInMatr positions clickPos CountC CountR = let (indI, indJ, (resI, resJ)) = foldl(foldlI) (0, 0, (-1,-1)) positions in if resI == -1 then (-1, -1) else (resI + 1, resJ + 1)
+findIndexInMatr positions clickPos countC countR = let (indI, indJ, (resI, resJ)) = foldl(foldlI) (0, 0, (-1,-1)) positions in if resI == -1 then (-1, -1) else (resI + 1, resJ + 1)
         where 
             isNear (x1, y1) (x2, y2) = abs (x1 - x2) < sizeX / 2 && abs (y1 - y2) < sizeY / 2
             foldlI (i, j, (resI, resJ)) curPos = if isNear curPos clickPos then (calcI, mod (j + 1) countR, (i, j)) else (calcI, mod (j + 1) countR, (resI, resJ))
@@ -156,22 +160,24 @@ checkOnClickOnHardMode (x,y) = if( x > -170 && x < 150) then if ( y > -150   && 
 -- ____________________________________________________________________________________________________________________________
 
 
-setNewStatus :: MemoryPuzzleGame -> GameStatus -> MemoryPuzzleGame
-setNewStatus (Game field  rPositions fScard sScard time sc mode _ _) GameStarted = Game
+setNewStatus :: StdGen -> MemoryPuzzleGame -> GameStatus -> Mode -> MemoryPuzzleGame
+setNewStatus gen (Game field  rPositions fScard sScard time sc mode _ _)  GameStarted newMode = Game
             {
-                field = field
+                field = generateFieldMatrix gen countC countR
             ,   rectPositions = genRectPositions startX startY countC countR sizeX sizeY intervalX intervalY
             ,   firstSelectedCard = fScard
             ,   secondSelectedCard = sScard
             ,   timer = time
             ,   score = sc
-            ,   difficult = mode
+            ,   difficult = newMode
             ,   status = GameStarted
             ,   using = 2
             }
-                where countC = if( mode == Easy) then 2 else  4
-                      countR = if( mode == Easy) then 6 else 8
-setNewStatus (Game field  rPositions fScard sScard time sc mode _ _) newStatus = Game
+                where countC = if | newMode == Easy -> 2
+                                  | newMode == Medium -> 4
+                                  | otherwise -> 5
+                      countR = 8
+setNewStatus _ (Game field  rPositions fScard sScard time sc mode _ _) newStatus _ = Game
             {
                 field = field
             ,   rectPositions = rPositions
@@ -185,16 +191,16 @@ setNewStatus (Game field  rPositions fScard sScard time sc mode _ _) newStatus =
             }
 
 
-handleKeys :: Event -> MemoryPuzzleGame -> MemoryPuzzleGame
-handleKeys (EventKey (MouseButton LeftButton) _ _ position) currentGame
-        | isUsing currentGame == False && getStatus currentGame  == MainMenu      && checkOnClickOnStart       position == True = setNewStatus currentGame ModeSelection
-        | isUsing currentGame == False && getStatus currentGame  == MainMenu      && checkOnClickOnExit        position == True = setNewStatus currentGame GameExit
-        | isUsing currentGame == False && getStatus currentGame  == ModeSelection && checkOnClickOnBack        position == True = setNewStatus currentGame MainMenu
-        | isUsing currentGame == False && getStatus currentGame  == ModeSelection && checkOnClickOnEasyMode    position == True = setNewStatus currentGame GameStarted
-        | isUsing currentGame == False && getStatus currentGame  == ModeSelection && checkOnClickOnMediumMode  position == True = setNewStatus currentGame GameStarted
-        | isUsing currentGame == False && getStatus currentGame  == ModeSelection && checkOnClickOnHardMode    position == True = setNewStatus currentGame GameStarted
+handleKeys :: StdGen ->  Event -> MemoryPuzzleGame -> MemoryPuzzleGame
+handleKeys gen (EventKey (MouseButton LeftButton) _ _ position) currentGame
+        | isUsing currentGame == False && getStatus currentGame  == MainMenu      && checkOnClickOnStart       position == True = setNewStatus gen currentGame ModeSelection NotSelected
+        | isUsing currentGame == False && getStatus currentGame  == MainMenu      && checkOnClickOnExit        position == True = setNewStatus gen currentGame GameExit NotSelected
+        | isUsing currentGame == False && getStatus currentGame  == ModeSelection && checkOnClickOnBack        position == True = setNewStatus gen currentGame MainMenu NotSelected
+        | isUsing currentGame == False && getStatus currentGame  == ModeSelection && checkOnClickOnEasyMode    position == True = setNewStatus gen currentGame GameStarted Easy
+        | isUsing currentGame == False && getStatus currentGame  == ModeSelection && checkOnClickOnMediumMode  position == True = setNewStatus gen currentGame GameStarted Medium
+        | isUsing currentGame == False && getStatus currentGame  == ModeSelection && checkOnClickOnHardMode    position == True = setNewStatus gen currentGame GameStarted Hard
         | otherwise = currentGame
-handleKeys _ currentGame = currentGame
+handleKeys _ _ currentGame = currentGame
 
 
 
@@ -245,5 +251,5 @@ main = do
     bGroundGameInProgress <- loadBMP "Backgrounds\\gameInProgress.bmp"
     picks <- loadIcons countOfPicks
     gen <- newStdGen
-    play mWindow background fps (initialNewGame gen) (render picks bGroundMainMenu bGroundModeSelection bGroundGameInProgress) handleKeys update
+    play mWindow background fps (initialNewGame gen) (render picks bGroundMainMenu bGroundModeSelection bGroundGameInProgress) (handleKeys gen) update
     
