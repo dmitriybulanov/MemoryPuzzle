@@ -84,7 +84,20 @@ genRectPositions stX stY countC countR szX szY intervalX intervalY = fromLists $
         foldFunI (list, (stX, stY)) x = (list ++ [genArrayOfRect stX stY]
             , (stX, stY - intervalY - sizeY)) 
 
-
+initialNewGame :: StdGen -> MemoryPuzzleGame
+initialNewGame gen = Game   
+    {
+        field = generateFieldMatrix gen countC countR
+    ,   rectPositions = fromLists []
+    ,   firstSelectedCard = (-1,-1)
+    ,   secondSelectedCard = (-1,-1)
+    ,   timer = 0.0
+    ,   score = 0
+    ,   difficult = NotSelected
+    ,   status = MainMenu
+    ,   using = 0
+    }   
+    
 {-    
     
 drawingMainWindow :: Picture
