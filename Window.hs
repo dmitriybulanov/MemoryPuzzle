@@ -34,7 +34,10 @@ initialNewGame n m = Game
     ,   score = 0
     ,   started = False
     }   
-           
+
+    
+    
+    
 drawingMainWindow :: Picture
 drawingMainWindow  = pictures
   [ translate (-285) 220 $ Scale 0.6 0.6 $ Text "Memory Puzzle"
@@ -42,8 +45,21 @@ drawingMainWindow  = pictures
   , translate (-120) 20 $ (Text "Start")
   , translate (-95) (-190) $ Text "End"
   ]
+
+
+checkOnClickOnStart :: (Float,Float) -> Bool 
+checkOnClickOnStart (x,y) = if( x > -120 && x < 120) then if ( y > 0 && y < 150) then True else False  else False
+  
     
 handleKeys :: Event -> MemoryPuzzleGame -> MemoryPuzzleGame
+handleKeys (EventKey (MouseButton LeftButton) _ _ position) (Game f sc False)
+        | (checkOnClickOnStart position) == True = Game
+            {
+                field = f
+            ,   score = sc
+            ,   started = True
+            }
+        | otherwise = (Game f sc False)
 handleKeys _ mGame = mGame
 
     
