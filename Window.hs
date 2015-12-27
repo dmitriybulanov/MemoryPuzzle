@@ -291,7 +291,7 @@ render _ _ _ _ _ p5(Game _ _ _ _ time sc _ GameFinished _) = pictures
 
 
 mWindow :: Display
-mWindow = InWindow "Memory Puszzle" (width, height) (offset, offset)  
+mWindow = InWindow "Memory Puzzle" (width, height) (offset, offset)  
     
 update :: Float -> MemoryPuzzleGame -> MemoryPuzzleGame
 update _ (Game field rPositions fScard sScard time sc mode ChekingCard 0) = Game
@@ -301,7 +301,7 @@ update _ (Game field rPositions fScard sScard time sc mode ChekingCard 0) = Game
             ,   firstSelectedCard = (-1,-1)
             ,   secondSelectedCard = (-1,-1)
             ,   timer = time
-            ,   score = if snd openResult == True then sc +10 else sc - 10
+            ,   score = if snd openResult == True then sc + 50 else sc - 10
             ,   difficult = mode
             ,   status = GameStarted
             ,   using = 0
