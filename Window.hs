@@ -78,7 +78,7 @@ initialNewGame gen = Game
  
 
 	
-  -- генерация позиций иконок начиная со стартовой точки
+-- генерация позиций иконок начиная со стартовой точки
 genRectPositions :: Float -> Float -> Int -> Int -> Float -> Float -> Float -> Float -> Matrix WindowPosition
 genRectPositions stX stY countC countR szX szY intervalX intervalY = fromLists $ fst $ foldl(foldFunI) ([], (stX, stY)) [1..countC]
     where
@@ -86,6 +86,17 @@ genRectPositions stX stY countC countR szX szY intervalX intervalY = fromLists $
         foldFunJ (list, (stX, stY)) x = (list ++ [(stX, stY)], (stX + intervalX + sizeX, stY))
         foldFunI (list, (stX, stY)) x = (list ++ [genArrayOfRect stX stY]
             , (stX, stY - intervalY - sizeY))
+			
+			
+genRectagles :: Matrix (FieldElem Int) -> Matrix WindowPosition -> [Picture] -> [Picture]
+genRectagles elems positions picks = fst $ foldl(foldFunI) ([], 0) (toList positions)
+    where
+        getTranslate stX stY curInd = translate stX stY $ getPick curInd
+        foldFunI (list, count) (x, y) = (list ++ [getTranslate x y count], count + 1)
+        getPick curInd = case (toList elems) !! curInd of
+            (Opened elem) -> picks !! (mod elem countOfPicks)
+            (Closed elem) -> picks !! (length picks - 1)
+            Deleted -> rectangleSolid 50 50 
   
 {-      
 drawingMainWindow :: Picture
