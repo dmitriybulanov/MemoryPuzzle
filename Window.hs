@@ -39,7 +39,7 @@ type WindowPosition = (Float, Float)
 data Mode = Easy | Medium | Hard | NotSelected
     deriving (Show, Eq)
 
-data GameStatus = ModeSelection | GameStarted | MainMenu | GamePaused | GameFinished | GameExit | ChekingCard
+data GameStatus = ModeSelection | GameStarted | MainMenu | GamePaused | GameFinished | GameExit | ChekingCard | CardPreview
     deriving (Show, Eq)
 
 
@@ -167,17 +167,17 @@ checkOnClickOnMainMenu (x,y) = if( x > -170 && x < 150) then if ( y > -150 && y 
 
 
 setNewStatus :: StdGen -> MemoryPuzzleGame -> GameStatus -> Mode -> MemoryPuzzleGame
-setNewStatus gen (Game f  rPositions fScard sScard time sc mode _ _)  GameStarted newMode = Game
+setNewStatus gen (Game f  rPositions fScard sScard time sc mode _ _)  CardPreview newMode = Game
             {
-                field = if ( mode /= newMode) then generateFieldMatrix gen countC countR else f
-            ,   rectPositions = if( mode /= newMode) then genRectPositions startX startY countC countR sizeX sizeY intervalX intervalY else rPositions
+                field = openAll $  generateFieldMatrix gen countC countR 
+            ,   rectPositions =  genRectPositions startX startY countC countR sizeX sizeY intervalX intervalY 
             ,   firstSelectedCard = fScard
             ,   secondSelectedCard = sScard
             ,   timer = time
             ,   score = sc
             ,   difficult = newMode
-            ,   status = GameStarted
-            ,   using = 2
+            ,   status = CardPreview
+            ,   using = 5
             }
                 where countC = if | newMode == Easy -> 2
                                   | newMode == Medium -> 4
@@ -246,9 +246,9 @@ handleKeys gen (EventKey (MouseButton LeftButton) _ _ position) currentGame
         | isUsing currentGame == False && getStatus currentGame  == MainMenu      && checkOnClickOnStart       position == True = setNewStatus gen currentGame ModeSelection NotSelected
         | isUsing currentGame == False && getStatus currentGame  == MainMenu      && checkOnClickOnExit        position == True = setNewStatus gen currentGame GameExit NotSelected
         | isUsing currentGame == False && getStatus currentGame  == ModeSelection && checkOnClickOnBack        position == True = setNewStatus gen currentGame MainMenu NotSelected
-        | isUsing currentGame == False && getStatus currentGame  == ModeSelection && checkOnClickOnEasyMode    position == True = setNewStatus gen currentGame GameStarted Easy
-        | isUsing currentGame == False && getStatus currentGame  == ModeSelection && checkOnClickOnMediumMode  position == True = setNewStatus gen currentGame GameStarted Medium
-		| isUsing currentGame == False && getStatus currentGame  == ModeSelection && checkOnClickOnHardMode    position == True = setNewStatus gen currentGame GameStarted Hard
+        | isUsing currentGame == False && getStatus currentGame  == ModeSelection && checkOnClickOnEasyMode    position == True = setNewStatus gen currentGame CardPreview Easy
+        | isUsing currentGame == False && getStatus currentGame  == ModeSelection && checkOnClickOnMediumMode  position == True = setNewStatus gen currentGame CardPreview Medium
+		| isUsing currentGame == False && getStatus currentGame  == ModeSelection && checkOnClickOnHardMode    position == True = setNewStatus gen currentGame CardPreview Hard
         | isUsing currentGame == False && getStatus currentGame  == GameStarted   && checkOnClickOnPause       position == True = setNewStatus gen currentGame GamePaused NotSelected	
         | isUsing currentGame == False && getStatus currentGame  == GamePaused    && checkOnClickOnContinue    position == True = setNewStatus gen currentGame GameStarted (difficult currentGame)
 		| isUsing currentGame == False && getStatus currentGame  == GamePaused    && checkOnClickOnMainMenu    position == True = setNewStatus gen currentGame MainMenu Hard
@@ -265,6 +265,7 @@ render :: [Picture] -> Picture -> Picture -> Picture -> Picture -> Picture -> Me
 render _ p1 _ _ _ _(Game _ _ _ _ _ _ _ MainMenu _) =  p1
 render _ _ p2 _ _ _(Game _ _ _ _ _ _ _ ModeSelection _)  = p2
 render picks _ _ p3 _ _(Game field rectPositions _ _ _ sc _ GameStarted _) = pictures $ [p3,  Color white $ translate (-285) 280 $ Scale 0.6 0.6 $ Text $ show sc] ++ (genRectagles field rectPositions picks)
+render picks _ _ p3 _ _(Game field rectPositions _ _ _ sc _ CardPreview _) = pictures $ [p3,  Color white $ translate (-285) 280 $ Scale 0.6 0.6 $ Text $ show sc] ++ (genRectagles field rectPositions picks)
 render picks _ _ p3 _ _(Game field rectPositions _ _ _ sc _ ChekingCard _) = pictures $ [p3,  Color white $ translate (-285) 280 $ Scale 0.6 0.6 $ Text $ show sc] ++ (genRectagles field rectPositions picks)
 render picks _ _ _ p4 _(Game field rectPositions _ _ _ sc _ GamePaused _) = pictures $ [p4,  Color white $ translate (-285) 280 $ Scale 0.6 0.6 $ Text $ show sc]
 
@@ -286,6 +287,22 @@ update _ (Game field rPositions fScard sScard time sc mode ChekingCard 0) = Game
             ,   using = 0
             }
                 where openResult = checkOpened (fScard,sScard) countOfPicks field
+
+update _ (Game field rPositions fScard sScard time sc mode CardPreview 0) = Game
+            { 
+                field = closeAll field
+            ,   rectPositions = rPositions
+            ,   firstSelectedCard = (-1,-1)
+            ,   secondSelectedCard = (-1,-1)
+            ,   timer = time
+            ,   score = sc
+            ,   difficult = mode
+            ,   status = GameStarted
+            ,   using = 0
+            }
+				
+				
+				
 update _ (Game field rPositions fScard sScard time sc mode stat uses)  = Game
             { 
                 field = field
