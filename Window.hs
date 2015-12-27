@@ -156,6 +156,10 @@ checkOnClickOnHardMode (x,y) = if( x > -170 && x < 150) then if ( y > -150   && 
   
 checkOnClickOnPause :: WindowPosition -> Bool
 checkOnClickOnPause (x,y) = if( x > 270 && x < 460) then if ( y >  270  && y < 400) then True else False  else False
+
+checkOnClickOnContinue :: WindowPosition -> Bool
+checkOnClickOnContinue (x,y) = if( x > -170 && x < 150) then if ( y > 0   && y < 110) then True else False  else False
+
 -- ____________________________________________________________________________________________________________________________
 
 
