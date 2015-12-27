@@ -1,3 +1,5 @@
+{-# LANGUAGE ViewPatterns #-}
+
 module Kernel where
 
 import Data.Matrix
@@ -65,21 +67,18 @@ isAllFounded = null . dropWhile(== Deleted) . toList
 
 -- открытие карты, если она открыта
 openCard :: Position -> Matrix (FieldElem Int)-> Matrix (FieldElem Int)
-openCard (i, j) matr = case getElem i j matr of
-    (Closed el) -> setElem (Opened el) (i, j) matr
-    _ -> matr
+openCard (i, j) matr@(getElem i j -> Closed el) = setElem (Opened el) (i, j) matr
+openCard _ matr = matr
     
 -- закрывает карту, если та открыта    
 closeCard :: Position -> Matrix (FieldElem Int) -> Matrix (FieldElem Int)
-closeCard (i, j) matr = case getElem i j matr of 
-        (Opened el) -> setElem (Closed el) (i, j) matr
-        _ -> matr
+closeCard (i, j) matr@(getElem i j -> Opened el) = setElem (Closed el) (i, j) matr
+closeCard _ matr = matr
 
 --  удаление карты, удалять можно, только если она открыта       
 deleteCard :: Position -> Matrix (FieldElem Int) -> Matrix (FieldElem Int)
-deleteCard (i, j) matr = case getElem i j matr of 
-        (Opened el) -> setElem Deleted (i, j) matr
-        _ -> matr       
+deleteCard (i, j) matr@(getElem i j -> Opened el) = setElem Deleted (i, j) matr
+deleteCard _ matr = matr     
         
 -- проверка двух открытых карт 
 checkOpened :: (Position, Position) -> Int -> Matrix (FieldElem Int) -> (Matrix (FieldElem Int), Bool)
