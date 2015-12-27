@@ -78,7 +78,7 @@ initialNewGame gen = Game
     ,   score = 0
     ,   difficult = NotSelected
     ,   status = MainMenu
-    ,   using = 0
+    ,   using = 2
     }   
 
  
@@ -160,6 +160,9 @@ checkOnClickOnPause (x,y) = if( x > 270 && x < 460) then if ( y >  270  && y < 4
 checkOnClickOnContinue :: WindowPosition -> Bool
 checkOnClickOnContinue (x,y) = if( x > -170 && x < 150) then if ( y > 0   && y < 110) then True else False  else False
 
+checkOnClickOnMainMenu:: WindowPosition -> Bool
+checkOnClickOnMainMenu (x,y) = if( x > -170 && x < 150) then if ( y > -150 && y < -20) then True else False  else False
+
 -- ____________________________________________________________________________________________________________________________
 
 
@@ -194,6 +197,9 @@ setNewStatus _ (Game field  rPositions fScard sScard time sc mode _ _) GamePause
             ,   using = 2
             }
                      
+setNewStatus gen _ MainMenu _ = initialNewGame gen
+			
+			
 setNewStatus _ (Game field  rPositions fScard sScard time sc mode _ _) newStatus _ = Game
             {
                 field = field
@@ -242,8 +248,10 @@ handleKeys gen (EventKey (MouseButton LeftButton) _ _ position) currentGame
         | isUsing currentGame == False && getStatus currentGame  == ModeSelection && checkOnClickOnBack        position == True = setNewStatus gen currentGame MainMenu NotSelected
         | isUsing currentGame == False && getStatus currentGame  == ModeSelection && checkOnClickOnEasyMode    position == True = setNewStatus gen currentGame GameStarted Easy
         | isUsing currentGame == False && getStatus currentGame  == ModeSelection && checkOnClickOnMediumMode  position == True = setNewStatus gen currentGame GameStarted Medium
-        | isUsing currentGame == False && getStatus currentGame  == GameStarted      && checkOnClickOnPause      position == True = setNewStatus gen currentGame GamePaused NotSelected
-        | isUsing currentGame == False && getStatus currentGame  == ModeSelection && checkOnClickOnHardMode    position == True = setNewStatus gen currentGame GameStarted Hard
+		| isUsing currentGame == False && getStatus currentGame  == ModeSelection && checkOnClickOnHardMode position == True = setNewStatus gen currentGame GameStarted Hard
+        | isUsing currentGame == False && getStatus currentGame  == GameStarted      && checkOnClickOnPause      position == True = setNewStatus gen currentGame GamePaused NotSelected	
+        | isUsing currentGame == False && getStatus currentGame  == GamePaused && checkOnClickOnContinue    position == True = setNewStatus gen currentGame GameStarted Hard
+		| isUsing currentGame == False && getStatus currentGame  == GamePaused && checkOnClickOnMainMenu    position == True = setNewStatus gen currentGame MainMenu Hard
         | isUsing currentGame == False && getStatus currentGame  == GameStarted   && cardPosition /= (-1,-1) = oCard cardPosition currentGame
         | otherwise = currentGame
                  where cardPosition = findIndexInMatr (toList $ rectPositions currentGame) position (if difficult currentGame == Easy then 2 else if (difficult currentGame == Medium ) then 4 else 5) 8
