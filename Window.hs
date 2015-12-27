@@ -60,7 +60,20 @@ isUsing :: MemoryPuzzleGame -> Bool
 isUsing (Game _ _ _ _ _ _ _ _ uses) = if(uses == 0) then False else True
     
 
-
+initialNewGame :: StdGen -> MemoryPuzzleGame
+initialNewGame gen = Game   
+    {
+        field = generateFieldMatrix gen countC countR
+    ,   rectPositions = fromLists []
+    ,   firstSelectedCard = (-1,-1)
+    ,   secondSelectedCard = (-1,-1)
+    ,   timer = 0.0
+    ,   score = 0
+    ,   difficult = NotSelected
+    ,   status = MainMenu
+    ,   using = 0
+    }   
+    
 {-    
     
 drawingMainWindow :: Picture
