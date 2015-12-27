@@ -1,4 +1,4 @@
-{-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE ViewPatterns, RankNTypes #-}
 
 module Kernel where
 
@@ -9,9 +9,12 @@ import System.Random
 import System.Environment
 import System.IO
 
+import Control.Concurrent.MonadIO
 import Control.Monad(when)
 
 type Position = (Int, Int)
+type GenAction m = forall a. Random a => m a
+type GenActionR m = forall a. Random a => (a, a) -> m a
 
 data FieldElem a = Opened a | Closed a | Deleted
     deriving (Show, Eq)
@@ -46,6 +49,21 @@ genMatrixPositions generator sizeC sizeR = foldl(mainFun generator) [] [1..sizeC
         mainFun curGen used cur = let (pos, nGen) = getRandomPosition curGen sizeC sizeR in if elem pos used then
                 mainFun nGen used cur else used ++ [pos]
 
+-- Random генерация позиции гибко с помощью расширения RankNTypes
+randomPosition :: MonadIO m => GenActionR m -> Int -> Int -> m [Position]
+randomPosition genR sizeC sizeR = do
+    i1 <- genR (1, sizeC)
+    i2 <- genR (1, sizeR)
+    return $ [(i1, i2)]
+
+genRandomPositions :: Int -> Int -> IO [Position]
+genRandomPositions = help []
+    where 
+        help :: [Position] -> Int -> Int -> IO [Position]
+        help list sizeC sizeR = do
+            arr <- randomPosition randomRIO sizeC sizeR
+            if (not $ length (nub list) == (sizeC * sizeR)) then (help (arr ++ (nub list)) sizeC sizeR) else return (nub list)
+            
 -- заполнение матрице в соответствии со сгенерированными позициями
 fillMatrix :: Matrix (FieldElem Int) -> [Position] -> Matrix (FieldElem Int)
 fillMatrix = help 1
