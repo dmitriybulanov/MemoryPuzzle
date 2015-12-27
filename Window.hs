@@ -4,6 +4,9 @@ import Kernel
 import System.Random
 import Data.Matrix
 
+-- Константы 
+-- _______________________________________________________________________________________
+
 
 width, height, offset :: Int
 width = 1024
@@ -20,12 +23,15 @@ count = 8
 countC = 4
 countR = 8
 countOfPicks = 5
-
 background :: Color
 background = white
 
 fps :: Int
-fps = 60
+fps = 3
+
+type WindowPosition = (Float, Float)
+
+-- _______________________________________________________________________________________
 
 
 
@@ -33,14 +39,14 @@ fps = 60
 data Mode = Easy | Medium | Hard | NotSelected
     deriving (Show, Eq)
 
-data GameStatus = ModeSelection | GameStarted | MainMenu | GamePaused | GameFinished | GameExit | ChekingCard | CardPreview
+data GameStatus = ModeSelection | GameStarted | MainMenu | GamePaused | GameFinished | GameExit | ChekingCard
     deriving (Show, Eq)
 
 
 
 data MemoryPuzzleGame = Game
     {
-        field :: Matrix FieldElem
+        field :: Matrix (FieldElem Int)
     ,   rectPositions :: Matrix WindowPosition
     ,   firstSelectedCard  :: Position
     ,   secondSelectedCard :: Position
@@ -58,10 +64,10 @@ getStatus (Game _ _ _ _ _ _ _ currentStatus _) = currentStatus
 
 isUsing :: MemoryPuzzleGame -> Bool
 isUsing (Game _ _ _ _ _ _ _ _ uses) = if(uses == 0) then False else True
- 
 
- 
- initialNewGame :: StdGen -> MemoryPuzzleGame
+
+    
+initialNewGame :: StdGen -> MemoryPuzzleGame
 initialNewGame gen = Game   
     {
         field = generateFieldMatrix gen countC countR
@@ -74,10 +80,13 @@ initialNewGame gen = Game
     ,   status = MainMenu
     ,   using = 0
     }   
- 
- 
 
-	
+ 
+ 
+ -- Функции для работы с картами
+-- ____________________________________________________________________________________________________________________________
+
+
 -- генерация позиций иконок начиная со стартовой точки
 genRectPositions :: Float -> Float -> Int -> Int -> Float -> Float -> Float -> Float -> Matrix WindowPosition
 genRectPositions stX stY countC countR szX szY intervalX intervalY = fromLists $ fst $ foldl(foldFunI) ([], (stX, stY)) [1..countC]
@@ -86,8 +95,8 @@ genRectPositions stX stY countC countR szX szY intervalX intervalY = fromLists $
         foldFunJ (list, (stX, stY)) x = (list ++ [(stX, stY)], (stX + intervalX + sizeX, stY))
         foldFunI (list, (stX, stY)) x = (list ++ [genArrayOfRect stX stY]
             , (stX, stY - intervalY - sizeY))
-			
-			
+
+
 genRectagles :: Matrix (FieldElem Int) -> Matrix WindowPosition -> [Picture] -> [Picture]
 genRectagles elems positions picks = fst $ foldl(foldFunI) ([], 0) (toList positions)
     where
@@ -97,6 +106,7 @@ genRectagles elems positions picks = fst $ foldl(foldFunI) ([], 0) (toList posit
             (Opened elem) -> picks !! (mod elem countOfPicks)
             (Closed elem) -> picks !! (length picks - 1)
             Deleted -> rectangleSolid 50 50
+
 
 loadIcons :: Int -> IO [Picture]
 loadIcons count = do
@@ -108,8 +118,8 @@ loadIcons count = do
                 return $ [bmp]
             addIcon :: IO [Picture] -> String -> IO [Picture]
             addIcon picks line = (++) <$> picks <*> (loadIcon line)
-			
-			
+
+
 findIndexInMatr :: [WindowPosition] -> WindowPosition -> Position
 findIndexInMatr positions clickPos = let (indI, indJ, (resI, resJ)) = foldl(foldlI) (0, 0, (-1,-1)) positions in if resI == -1 then (-1, -1) else (resI + 1, resJ + 1)
         where 
@@ -117,50 +127,44 @@ findIndexInMatr positions clickPos = let (indI, indJ, (resI, resJ)) = foldl(fold
             foldlI (i, j, (resI, resJ)) curPos = if isNear curPos clickPos then (calcI, mod (j + 1) countR, (i, j)) else (calcI, mod (j + 1) countR, (resI, resJ))
                 where   
                     calcI = if mod (j + 1) countR == 0 then mod (i+1) countC else i
-  
-{-      
-drawingMainWindow :: Picture
-drawingMainWindow  = pictures
-  [ translate (-285) 220 $ Scale 0.6 0.6 $ Text "Memory Puzzle"
-  , Line [(-300,180), (300, 180)]
-  , translate (-120) 20 $ (Text "Start")
-  , translate (-95) (-190) $ Text "End"
-  ]
+
+-- ____________________________________________________________________________________________________________________________
 
 
-checkOnClickOnStart :: (Float,Float) -> Bool 
-checkOnClickOnStart (x,y) = if( x > -120 && x < 120) then if ( y > 0 && y < 150) then True else False  else False
-  
-    
-handleKeys :: Event -> MemoryPuzzleGame -> MemoryPuzzleGame
-handleKeys (EventKey (MouseButton LeftButton) _ _ position) (Game f sc False)
-        | (checkOnClickOnStart position) == True = Game
-            {
-                field = f
-            ,   score = sc
-            ,   started = True
-            }
-        | otherwise = (Game f sc False)
-handleKeys _ mGame = mGame
 
-    
 
-render :: MemoryPuzzleGame -> Picture
-render  (Game _ _ False)  = drawingMainWindow 
-render  (Game _ sc True)  = pictures
-  [ translate (-285) 220 $ Scale 0.5 0.5 $ Text ("Scores : " ++ show sc)
-  , Line [(-300,180), (300, 180)]
-  ]
+render :: [Picture] -> Picture -> Picture -> Picture -> MemoryPuzzleGame -> Picture
+render _ p1 _ _ (Game _ _ _ _ _ _ _ MainMenu _) =  p1
+render _ _ p2 _ (Game _ _ _ _ _ _ _ ModeSelection _)  = p2
+render picks _ _ p3 (Game field rectPositions _ _ _ _ _ GameStarted _) = pictures $ [p3] ++ (genRectagles field rectPositions picks)
+render picks _ _ p3 (Game field rectPositions _ _ _ _ _ ChekingCard _) = pictures $ [p3] ++ (genRectagles field rectPositions picks)
 
-    
+
 mWindow :: Display
 mWindow = InWindow "Memory Puszzle" (width, height) (offset, offset)  
     
 update :: Float -> MemoryPuzzleGame -> MemoryPuzzleGame
-update _ mGame = mGame
- 
-
-main :: IO ()
-main = do
-    play mWindow background fps (initialNewGame 300 300) render handleKeys update
-    -}
+update _ (Game field rPositions fScard sScard time sc mode ChekingCard 0) = Game
+            { 
+                field = fst $ checkOpened (fScard,sScard) countOfPicks field
+            ,   rectPositions = rPositions
+            ,   firstSelectedCard = (-1,-1)
+            ,   secondSelectedCard = (-1,-1)
+            ,   timer = time
+            ,   score = sc
+            ,   difficult = mode
+            ,   status = GameStarted
+            ,   using = 0
+            }
+update _ (Game field rPositions fScard sScard time sc mode stat uses)  = Game
+            { 
+                field = field
+            ,   rectPositions = rPositions
+            ,   firstSelectedCard = fScard
+            ,   secondSelectedCard = sScard
+            ,   timer = time
+            ,   score = sc
+            ,   difficult = mode
+            ,   status = stat
+            ,   using = if (uses > 0 ) then uses-1 else 0
+            }
