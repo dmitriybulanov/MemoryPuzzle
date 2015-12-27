@@ -50,7 +50,7 @@ data MemoryPuzzleGame = Game
     ,   rectPositions :: Matrix WindowPosition
     ,   firstSelectedCard  :: Position
     ,   secondSelectedCard :: Position
-    ,   timer :: Float
+    ,   timer :: Int
     ,   score :: Int
     ,   difficult :: Mode
     ,   status :: GameStatus
@@ -74,7 +74,7 @@ initialNewGame gen = Game
     ,   rectPositions = fromLists []
     ,   firstSelectedCard = (-1,-1)
     ,   secondSelectedCard = (-1,-1)
-    ,   timer = 0.0
+    ,   timer = 0
     ,   score = 0
     ,   difficult = NotSelected
     ,   status = MainMenu
@@ -169,8 +169,8 @@ checkOnClickOnMainMenu (x,y) = if( x > -170 && x < 150) then if ( y > -150 && y 
 setNewStatus :: StdGen -> MemoryPuzzleGame -> GameStatus -> Mode -> MemoryPuzzleGame
 setNewStatus gen (Game f  rPositions fScard sScard time sc mode _ _)  CardPreview newMode = Game
             {
-                field = openAll $  generateFieldMatrix gen countC countR 
-            ,   rectPositions =  genRectPositions startX startY countC countR sizeX sizeY intervalX intervalY 
+                field = openAll $ generateFieldMatrix gen countC countR 
+            ,   rectPositions = genRectPositions startX startY countC countR sizeX sizeY intervalX intervalY 
             ,   firstSelectedCard = fScard
             ,   secondSelectedCard = sScard
             ,   timer = time
@@ -251,7 +251,7 @@ handleKeys gen (EventKey (MouseButton LeftButton) _ _ position) currentGame
 		| isUsing currentGame == False && getStatus currentGame  == ModeSelection && checkOnClickOnHardMode    position == True = setNewStatus gen currentGame CardPreview Hard
         | isUsing currentGame == False && getStatus currentGame  == GameStarted   && checkOnClickOnPause       position == True = setNewStatus gen currentGame GamePaused NotSelected	
         | isUsing currentGame == False && getStatus currentGame  == GamePaused    && checkOnClickOnContinue    position == True = setNewStatus gen currentGame GameStarted (difficult currentGame)
-		| isUsing currentGame == False && getStatus currentGame  == GamePaused    && checkOnClickOnMainMenu    position == True = setNewStatus gen currentGame MainMenu Hard
+		| isUsing currentGame == False && getStatus currentGame  == GamePaused    && checkOnClickOnMainMenu    position == True = setNewStatus gen currentGame MainMenu NotSelected
         | isUsing currentGame == False && getStatus currentGame  == GameStarted   && cardPosition /= (-1,-1) = oCard cardPosition currentGame
         | otherwise = currentGame
                  where cardPosition = findIndexInMatr (toList $ rectPositions currentGame) position (if difficult currentGame == Easy then 2 else if (difficult currentGame == Medium ) then 4 else 5) 8
@@ -263,10 +263,21 @@ handleKeys _ _ currentGame = currentGame
 
 render :: [Picture] -> Picture -> Picture -> Picture -> Picture -> Picture -> MemoryPuzzleGame -> Picture
 render _ p1 _ _ _ _(Game _ _ _ _ _ _ _ MainMenu _) =  p1
+render _ _ _ _ _ p5(Game _ _ _ _ _ _ _ GameFinished _) =  p5
 render _ _ p2 _ _ _(Game _ _ _ _ _ _ _ ModeSelection _)  = p2
-render picks _ _ p3 _ _(Game field rectPositions _ _ _ sc _ GameStarted _) = pictures $ [p3,  Color white $ translate (-285) 280 $ Scale 0.6 0.6 $ Text $ show sc] ++ (genRectagles field rectPositions picks)
+render picks _ _ p3 _ _(Game field rectPositions _ _ time sc _ GameStarted _) = pictures $ 
+        [
+           p3
+        ,  Color white $ translate (-285) 280 $ Scale 0.6 0.6 $ Text $ show sc 
+        ,  Color white $ translate (0) 250 $ Scale 0.3 0.3 $ Text $ show time
+        ] ++ (genRectagles field rectPositions picks)
 render picks _ _ p3 _ _(Game field rectPositions _ _ _ sc _ CardPreview _) = pictures $ [p3,  Color white $ translate (-285) 280 $ Scale 0.6 0.6 $ Text $ show sc] ++ (genRectagles field rectPositions picks)
-render picks _ _ p3 _ _(Game field rectPositions _ _ _ sc _ ChekingCard _) = pictures $ [p3,  Color white $ translate (-285) 280 $ Scale 0.6 0.6 $ Text $ show sc] ++ (genRectagles field rectPositions picks)
+render picks _ _ p3 _ _(Game field rectPositions _ _ time sc _ ChekingCard _) = pictures $ 
+        [
+           p3
+        ,  Color white $ translate (-285) 280 $ Scale 0.6 0.6 $ Text $ show sc 
+        ,  Color white $ translate (0) 250 $ Scale 0.3 0.3 $ Text $ show time
+        ] ++ (genRectagles field rectPositions picks)
 render picks _ _ _ p4 _(Game field rectPositions _ _ _ sc _ GamePaused _) = pictures $ [p4,  Color white $ translate (-285) 280 $ Scale 0.6 0.6 $ Text $ show sc]
 
 
@@ -288,21 +299,34 @@ update _ (Game field rPositions fScard sScard time sc mode ChekingCard 0) = Game
             }
                 where openResult = checkOpened (fScard,sScard) countOfPicks field
 
-update _ (Game field rPositions fScard sScard time sc mode CardPreview 0) = Game
+
+update _ (Game field rPositions fScard sScard time sc mode CardPreview 0)  = Game
             { 
                 field = closeAll field
             ,   rectPositions = rPositions
-            ,   firstSelectedCard = (-1,-1)
-            ,   secondSelectedCard = (-1,-1)
-            ,   timer = time
+            ,   firstSelectedCard = fScard
+            ,   secondSelectedCard = sScard
+            ,   timer = 300
             ,   score = sc
             ,   difficult = mode
             ,   status = GameStarted
             ,   using = 0
             }
-				
-				
-				
+
+update _ (Game field rPositions fScard sScard time sc mode GameStarted uses) = Game
+            {
+                field = field
+            ,   rectPositions = rPositions
+            ,   firstSelectedCard = fScard
+            ,   secondSelectedCard = sScard
+            ,   timer = time - 1
+            ,   score = sc
+            ,   difficult = mode
+            ,   status = if endGame then GameFinished else GameStarted
+            ,   using = if (uses > 0 ) then uses-1 else 0
+            }
+				 where endGame = (isAllFounded field) 
+
 update _ (Game field rPositions fScard sScard time sc mode stat uses)  = Game
             { 
                 field = field
@@ -317,14 +341,16 @@ update _ (Game field rPositions fScard sScard time sc mode stat uses)  = Game
             }
 
 
+          
+
 
 main :: IO ()
 main = do
-    bGroundMainMenu <- loadBMP "Backgrounds\\mainMenu.bmp"
-    bGroundModeSelection <- loadBMP "Backgrounds\\modeSelection.bmp"
+    bGroundMainMenu       <- loadBMP "Backgrounds\\mainMenu.bmp"
+    bGroundModeSelection  <- loadBMP "Backgrounds\\modeSelection.bmp"
     bGroundGameInProgress <- loadBMP "Backgrounds\\gameInProgress.bmp"
-    bGroundGamePaused <- loadBMP "Backgrounds\\pause.bmp"
-    bGroundGameResult <- loadBMP "Backgrounds\\gameResults.bmp"
+    bGroundGamePaused     <- loadBMP "Backgrounds\\pause.bmp"
+    bGroundGameResult     <- loadBMP "Backgrounds\\gameResults.bmp"
     picks <- loadIcons countOfPicks
     gen <- newStdGen
     play mWindow background fps (initialNewGame gen) (render picks bGroundMainMenu bGroundModeSelection bGroundGameInProgress bGroundGamePaused bGroundGameResult) (handleKeys gen) update
