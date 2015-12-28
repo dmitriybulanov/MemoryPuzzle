@@ -46,7 +46,8 @@ genMatrixPositions :: StdGen -> Int -> Int -> [Position]
 genMatrixPositions generator sizeC sizeR = foldl(mainFun generator) [] [1..sizeC*sizeR]
     where
         mainFun curGen used cur = let (pos, nGen) = getRandomPosition curGen sizeC sizeR in if elem pos used then
-                mainFun nGen used cur else used ++ [pos]
+                mainFun nGen used cur else used ++ [pos]  
+
 
 -- Random генерация позиции гибко с помощью расширения RankNTypes
 randomPosition :: MonadIO m => GenActionR m -> Int -> Int -> m [Position]
@@ -62,6 +63,11 @@ genRandomPositions = help []
         help list sizeC sizeR = do
             arr <- randomPosition randomRIO sizeC sizeR
             if (not $ length (nub list) == (sizeC * sizeR)) then (help (arr ++ (nub list)) sizeC sizeR) else return (nub list)
+
+generateFieldMatrixWithRNT :: StdGen -> Int -> Int -> IO (Matrix (FieldElem Int))
+generateFieldMatrixWithRNT gen sizeC sizeR = do
+    positions <- genRandomPositions sizeC sizeR
+    return $ fillMatrix (myZero sizeC sizeR) positions            
             
 -- заполнение матрице в соответствии со сгенерированными позициями
 fillMatrix :: Matrix (FieldElem Int) -> [Position] -> Matrix (FieldElem Int)
