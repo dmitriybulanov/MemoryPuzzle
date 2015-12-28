@@ -201,8 +201,8 @@ setNewStatus _ (Game field  rPositions fScard sScard time sc mode _ _) GamePause
             }
                      
 setNewStatus gen _ MainMenu _ = initialNewGame gen
-			
-			
+            
+            
 setNewStatus _ (Game field  rPositions fScard sScard time sc mode _ _) newStatus _ = Game
             {
                 field = field
@@ -251,11 +251,11 @@ handleKeys gen (EventKey (MouseButton LeftButton) _ _ position) currentGame
         | isUsing currentGame == False && getStatus currentGame  == ModeSelection && checkOnClickOnBack        position == True = setNewStatus gen currentGame MainMenu NotSelected
         | isUsing currentGame == False && getStatus currentGame  == ModeSelection && checkOnClickOnEasyMode    position == True = setNewStatus gen currentGame CardPreview Easy
         | isUsing currentGame == False && getStatus currentGame  == ModeSelection && checkOnClickOnMediumMode  position == True = setNewStatus gen currentGame CardPreview Medium
-		| isUsing currentGame == False && getStatus currentGame  == ModeSelection && checkOnClickOnHardMode    position == True = setNewStatus gen currentGame CardPreview Hard
-        | isUsing currentGame == False && getStatus currentGame  == GameStarted   && checkOnClickOnPause       position == True = setNewStatus gen currentGame GamePaused NotSelected	
+        | isUsing currentGame == False && getStatus currentGame  == ModeSelection && checkOnClickOnHardMode    position == True = setNewStatus gen currentGame CardPreview Hard
+        | isUsing currentGame == False && getStatus currentGame  == GameStarted   && checkOnClickOnPause       position == True = setNewStatus gen currentGame GamePaused NotSelected   
         | isUsing currentGame == False && getStatus currentGame  == GamePaused    && checkOnClickOnContinue    position == True = setNewStatus gen currentGame GameStarted (difficult currentGame)
-		| isUsing currentGame == False && getStatus currentGame  == GamePaused    && checkOnClickOnMainMenu    position == True = setNewStatus gen currentGame MainMenu NotSelected
-		| isUsing currentGame == False && getStatus currentGame  == GameFinished  && checkOnClickOnMainMenuAfterRes    position == True = setNewStatus gen currentGame MainMenu NotSelected
+        | isUsing currentGame == False && getStatus currentGame  == GamePaused    && checkOnClickOnMainMenu    position == True = setNewStatus gen currentGame MainMenu NotSelected
+        | isUsing currentGame == False && getStatus currentGame  == GameFinished  && checkOnClickOnMainMenuAfterRes    position == True = setNewStatus gen currentGame MainMenu NotSelected
         | isUsing currentGame == False && getStatus currentGame  == GameStarted   && cardPosition /= (-1,-1) = oCard cardPosition currentGame
         | otherwise = currentGame
                  where cardPosition = findIndexInMatr (toList $ rectPositions currentGame) position (if difficult currentGame == Easy then 2 else if (difficult currentGame == Medium ) then 4 else 5) 8
@@ -283,7 +283,7 @@ render picks _ _ p3 _ _(Game field rectPositions _ _ time sc _ ChekingCard _) = 
         ] ++ (genRectagles field rectPositions picks)
 render picks _ _ _ p4 _(Game field rectPositions _ _ _ sc _ GamePaused _) = pictures $ [p4,  Color white $ translate (-285) 280 $ Scale 0.6 0.6 $ Text $ show sc]
 render _ _ _ _ _ p5(Game _ _ _ _ time sc _ GameFinished _) = pictures
-		[
+        [
            p5
         ,  Color white $ translate 30 80 $ Scale 0.6 0.6 $ Text $ show sc 
         ,  Color white $ translate 30 (-10) $ Scale 0.6 0.6 $ Text $ show time
@@ -334,7 +334,7 @@ update _ (Game field rPositions fScard sScard time sc mode GameStarted uses) = G
             ,   status = if endGame then GameFinished else GameStarted
             ,   using = if (uses > 0 ) then uses-1 else 0
             }
-				 where endGame = (time == 1) ||(isAllFounded field)  
+                 where endGame = (time == 1) ||(isAllFounded field)  
 
 update _ (Game field rPositions fScard sScard time sc mode stat uses)  = Game
             { 
