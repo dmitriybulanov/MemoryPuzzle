@@ -1,4 +1,4 @@
-{-# LANGUAGE MultiWayIf, RecordWildCards #-}
+{-# LANGUAGE MultiWayIf, RecordWildCards, NamedFieldPuns #-}
 
 import Graphics.Gloss
 import Graphics.Gloss.Interface.IO.Game
@@ -224,7 +224,7 @@ setNewStatus _ Game{..} GamePaused _ = Game
             ,   using = 2
             }
                      
-setNewStatus gen _ MainMenu _ = initialNewGame gen
+setNewStatus gen Game{timer, score} MainMenu _ = initialNewGame (mkStdGen (timer + score))
             
             
 setNewStatus _ Game{..} newStatus _ = Game
@@ -401,7 +401,7 @@ update _ Game{..}  = Game
 
  
 mWindow :: Display
-mWindow = InWindow "Memory Puszzle" (width, height) (offset, offset)           
+mWindow = InWindow "Memory Puzzle" (width, height) (offset, offset)           
 
 
 main :: IO ()
