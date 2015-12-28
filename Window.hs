@@ -333,17 +333,9 @@ render _ _ _ _ _ p5(Game _ _ _ _ timer score _ GameFinished _) = pictures
         [
            p5
         ,  Color white $ translate 30 80 $ Scale 0.6 0.6 $ Text $ show score 
-        ,  Color white $ translate 30 (-15) $ Scale 0.6 0.6 $ Text $ show timer
+        ,  Color white $ translate 30 (-20) $ Scale 0.6 0.6 $ Text $ show timer
         ]
 -- ____________________________________________________________________________________________________________________________
-
-<<<<<<< HEAD
-=======
-mWindow :: Display
-mWindow = InWindow "Memory Puzzle" (width, height) (offset, offset)  
->>>>>>> 0a9eceafa3957b2176db900a1affadb0279f5a9d
-    
-
 
 
 -- Обновление MemoryPuzzleGame каждый фрейм в зависимости от состояния
@@ -357,15 +349,9 @@ update _ (Game field rectPositions firstSelectedCard secondSelectedCard timer sc
             ,   rectPositions = rectPositions
             ,   firstSelectedCard = (-1,-1)
             ,   secondSelectedCard = (-1,-1)
-<<<<<<< HEAD
             ,   timer = timer
             ,   score = if snd openResult == True then score +100 else score - 10
             ,   difficult = difficult
-=======
-            ,   timer = time
-            ,   score = if snd openResult == True then sc + 50 else sc - 10
-            ,   difficult = mode
->>>>>>> 0a9eceafa3957b2176db900a1affadb0279f5a9d
             ,   status = GameStarted
             ,   using = 0
             }
@@ -413,7 +399,6 @@ update _ Game{..}  = Game
             }
 -- ____________________________________________________________________________________________________________________________
 
-
  
 mWindow :: Display
 mWindow = InWindow "Memory Puszzle" (width, height) (offset, offset)           
@@ -421,11 +406,11 @@ mWindow = InWindow "Memory Puszzle" (width, height) (offset, offset)
 
 main :: IO ()
 main = do
-    bGroundMainMenu       <- loadBMP "Backgrounds\\mainMenu.bmp"
-    bGroundModeSelection  <- loadBMP "Backgrounds\\modeSelection.bmp"
-    bGroundGameInProgress <- loadBMP "Backgrounds\\gameInProgress.bmp"
-    bGroundGamePaused     <- loadBMP "Backgrounds\\pause.bmp"
-    bGroundGameResult     <- loadBMP "Backgrounds\\gameResults.bmp"
-    picks <- loadIcons countOfPicks
-    gen <- newStdGen
-    play mWindow background fps (initialNewGame gen) (render picks bGroundMainMenu bGroundModeSelection bGroundGameInProgress bGroundGamePaused bGroundGameResult) (handleKeys gen) update
+     bGroundMainMenu <- loadBMP "Backgrounds\\mainMenu.bmp"
+     bGroundModeSelection <- loadBMP "Backgrounds\\modeSelection.bmp"
+     bGroundGameInProgress <- loadBMP "Backgrounds\\gameInProgress.bmp"
+     bGroundGamePaused <- loadBMP "Backgrounds\\pause.bmp"
+     bGroundGameResult <- loadBMP "Backgrounds\\gameResults.bmp"
+     picks <- loadIcons countOfPicks
+     gen <- newStdGen
+     play mWindow background fps (initialNewGame gen) (render picks bGroundMainMenu bGroundModeSelection bGroundGameInProgress bGroundGamePaused bGroundGameResult) (handleKeys gen) update
