@@ -337,6 +337,11 @@ render _ _ _ _ _ p5(Game _ _ _ _ timer score _ GameFinished _) = pictures
         ]
 -- ____________________________________________________________________________________________________________________________
 
+<<<<<<< HEAD
+=======
+mWindow :: Display
+mWindow = InWindow "Memory Puzzle" (width, height) (offset, offset)  
+>>>>>>> 0a9eceafa3957b2176db900a1affadb0279f5a9d
     
 
 
@@ -352,9 +357,15 @@ update _ (Game field rectPositions firstSelectedCard secondSelectedCard timer sc
             ,   rectPositions = rectPositions
             ,   firstSelectedCard = (-1,-1)
             ,   secondSelectedCard = (-1,-1)
+<<<<<<< HEAD
             ,   timer = timer
             ,   score = if snd openResult == True then score +100 else score - 10
             ,   difficult = difficult
+=======
+            ,   timer = time
+            ,   score = if snd openResult == True then sc + 50 else sc - 10
+            ,   difficult = mode
+>>>>>>> 0a9eceafa3957b2176db900a1affadb0279f5a9d
             ,   status = GameStarted
             ,   using = 0
             }
